@@ -18,7 +18,7 @@ type ConfigFileMetadataListResult struct {
 }
 
 // GetConfigFileMetadata 获取分组下的文件列表
-func (s *SDK) GetConfigFileMetadataList(ns, group string) ([]ConfigFile, error) {
+func (s *SDK) GetConfigFileMetadataList(ns, group string) (*ConfigFileMetadataListResult, error) {
 	resp, err := s.polarisClient.Resty().R().SetBody(&ConfigFileMetadataListRequest{
 		ConfigFileGroup: ConfigFileGroup{
 			Namespace: ns,
@@ -34,5 +34,5 @@ func (s *SDK) GetConfigFileMetadataList(ns, group string) ([]ConfigFile, error) 
 		return nil, err
 	}
 
-	return result.ConfigFileInfos, nil
+	return result, nil
 }

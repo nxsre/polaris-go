@@ -69,6 +69,10 @@ func (w *ConfigFilesWatcher) fireChangeEvent(event model.ConfigFileChangeEvent) 
 	}
 }
 
+var (
+	num int64 = 0
+)
+
 func (w *ConfigFilesWatcher) Run() {
 	for {
 		select {
@@ -82,19 +86,25 @@ func (w *ConfigFilesWatcher) Run() {
 			resp, err := w.sdk.polarisClient.Resty().R().SetContext(w.sdk.ctx).SetBody(&WatchFilesRequest{files}).
 				Post(PolarisUrl("/config/v1/WatchConfigFile"))
 			if err != nil {
-				log.Errorln(err)
+				log.Fatalln(err)
 				return
 			}
 
 			configFileResp := ConfigFileResponse{}
 			err = json.Unmarshal(resp.Body(), &configFileResp)
 			if err != nil {
-				log.Errorln(err)
+				log.Fatalln(err)
 				return
+			}
+
+			// "/config/v1/WatchConfigFile" 接口在1分钟无更新时会返回 DataNoChange
+			if configFileResp.GetCode() == specmodel.Code_DataNoChange {
+				continue
 			}
 
 			// w.sdk.ctx Done
 			if configFileResp.GetCode() != specmodel.Code_ExecuteSuccess {
+				log.Errorln(configFileResp.GetCode())
 				return
 			}
 
